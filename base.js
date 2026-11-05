@@ -2,6 +2,11 @@
 (() => {
   'use strict';
   const cfg = window.PAUTA_CONFIG || {};
+  /* O link do e-mail chega no endereço. É lido antes de o Supabase limpar a barra. */
+  const hashInicial = location.hash;
+  const pedeSenha = /type=(recovery|invite)/.test(hashInicial);
+  const linkRuim = /error_code=|error=/.test(hashInicial) ? (/otp_expired/.test(hashInicial) ? 'Este link expirou ou já foi usado. Peça um novo.' : 'Não foi possível usar este link. Peça um novo.') : '';
+  if (linkRuim) history.replaceState(null, '', location.pathname);
   const sb = window.supabase.createClient(cfg.url, cfg.anonKey, { auth: { persistSession: true, autoRefreshToken: true } });
   let sessao = null, abre;
   const logado = new Promise(r => (abre = r));
@@ -177,11 +182,12 @@
       who.append(c);
     }
     abre();
+    if (pedeSenha) telaSenha();
   }
   addEventListener('DOMContentLoaded', () => {});
   window.__iniciaLogin = async () => {
     const { data } = await sb.auth.getSession();
-    if (data.session) await entra(data.session); else telaLogin();
+    if (data.session) await entra(data.session); else telaLogin(linkRuim);
   };
   sb.auth.onAuthStateChange((ev, s) => { if (s) sessao = s; if (ev === 'SIGNED_OUT' && sessao) location.reload(); });
 })();
