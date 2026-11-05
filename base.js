@@ -136,6 +136,27 @@
     t.hidden = false;
     t.querySelector('#lg-m').textContent = msg || '';
   }
+  function telaSenha() {
+    const t = document.createElement('div');
+    t.className = 'overlay'; t.style.zIndex = 50;
+    t.innerHTML = `<form class="sheet" style="width:min(380px,100%);margin-top:12vh"><h2>Criar ou trocar senha</h2>
+      <div class="fld"><label for="sn-1">Nova senha</label><input id="sn-1" type="password" required minlength="10" autocomplete="new-password"><small>Use pelo menos 10 caracteres.</small></div>
+      <div class="fld"><label for="sn-2">Repita a senha</label><input id="sn-2" type="password" required minlength="10" autocomplete="new-password"></div>
+      <small id="sn-m" style="color:var(--crit)"></small>
+      <div class="btns"><button class="btn pri">Salvar senha</button><button type="button" class="btn" id="sn-x">Cancelar</button></div></form>`;
+    document.body.append(t);
+    t.querySelector('#sn-x').onclick = () => t.remove();
+    t.querySelector('form').addEventListener('submit', async ev => {
+      ev.preventDefault(); ev.stopPropagation();
+      const a = t.querySelector('#sn-1').value, m = t.querySelector('#sn-m');
+      if (a !== t.querySelector('#sn-2').value) { m.textContent = 'As senhas não são iguais.'; return; }
+      const r = await sb.auth.updateUser({ password: a });
+      if (r.error) { m.textContent = 'Não foi possível salvar. Tente uma senha mais forte.'; return; }
+      t.remove();
+      const av = document.getElementById('toast');
+      if (av) { av.textContent = 'Senha salva.'; av.hidden = false; setTimeout(() => (av.hidden = true), 4000); }
+    });
+  }
   async function entra(s) {
     const r = await sb.from('membros').select('email').eq('email', s.user.email).maybeSingle();
     if (r.error && !/fetch|network/i.test(r.error.message || '')) { await sb.auth.signOut(); telaLogin('Não foi possível validar seu acesso.'); return; }
@@ -149,6 +170,11 @@
       b.style.cssText = 'background:none;border:0;color:var(--side-muted);text-decoration:underline;padding:2px 0;justify-self:start';
       b.onclick = async () => { await sb.auth.signOut(); location.reload(); };
       who.append(b);
+      const c = document.createElement('button');
+      c.id = 'senha'; c.textContent = 'Criar ou trocar senha'; c.className = 'btn';
+      c.style.cssText = b.style.cssText;
+      c.onclick = telaSenha;
+      who.append(c);
     }
     abre();
   }
