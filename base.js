@@ -1,6 +1,9 @@
 /* Login e conexão com o Supabase. Oferece à página a mesma interface de banco que ela já usa. */
 (() => {
   'use strict';
+  const estilo = document.createElement('style');
+  estilo.textContent = '.side{overflow-y:auto}#senha,#sair{color:var(--side-ink)!important}';
+  document.head.append(estilo);
   const cfg = window.PAUTA_CONFIG || {};
   /* O link do e-mail chega no endereço. É lido antes de o Supabase limpar a barra. */
   const hashInicial = location.hash;
@@ -142,6 +145,7 @@
     t.querySelector('#lg-m').textContent = msg || '';
   }
   function telaSenha() {
+    if (document.getElementById('sn-1')) return;
     const t = document.createElement('div');
     t.className = 'overlay'; t.style.zIndex = 50;
     t.innerHTML = `<form class="sheet" style="width:min(380px,100%);margin-top:12vh"><h2>Criar ou trocar senha</h2>
@@ -182,7 +186,8 @@
       who.append(c);
     }
     abre();
-    if (pedeSenha) telaSenha();
+    if (pedeSenha || location.hash === '#senha') telaSenha();
+    addEventListener('hashchange', () => { if (location.hash === '#senha') telaSenha(); });
   }
   addEventListener('DOMContentLoaded', () => {});
   window.__iniciaLogin = async () => {
